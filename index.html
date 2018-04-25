@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 12px Helvetica;
+}
+
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px;
+}
+
+</style>
+<body>
+<script type="text/javascript" src="http://gc.kis.v2.scr.kaspersky-labs.com/52594E48-055D-2443-86FD-A3ECCF3A0343/main.js" charset="UTF-8"></script>
+<script src="http://d3js.org/d3.v3.js"></script>
+<div>
+<div style="display: table-cell; width: 120;">
+    <label for="xdropdown">Course: </label>
+	<select id="xdropdown">
+      <option value="CS101">CS101</option>
+      <option value="CS102">CS102</option>
+	  <option value="CS175">CS175</option>
+	  <option value="CS202">CS202</option>
+	  <option value="CS210">CS210</option>
+	  <option value="CS285">CS285</option>
+	  <option value="CS311">CS311</option>
+	  <option value="CS330">CS330</option>
+	  <option value="CS331">CS331</option>
+	  <option value="CS340">CS340</option>
+	  <option value="CS371">CS371</option>
+	  <option value="CS492">CS492</option>
+	  
+    </select>
+	<input type="button" onclick="getData()" value="Update">
+  </div>
+</div>
+  
+<script>
+var margin = {top: 20, right: 50, bottom: 30, left: 50},
+    width = 630 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+	
+var parseDate = d3.time.format("%Y").parse;
+
+var x = d3.time.scale()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var color = d3.scale.category10();
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .ticks(5)
+    .innerTickSize(15)
+    .outerTickSize(0)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .tickFormat(function(d) { return d + "%";})
+    .ticks(5)
+    .innerTickSize(15)
+    .outerTickSize(0)
+    .orient("left");
+
+var line = d3.svg.line()
+    .interpolate("basis")
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.price); });
+
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.tsv("CS101.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+
+function getData()
+{
+	var x = document.getElementById("xdropdown");
+	var xValue = x.options[x.selectedIndex].value;
+	
+	
+    if (xValue == "CS101")
+	{CS101();}
+	
+	if (xValue == "CS102")
+	{CS102();}
+	
+	if (xValue == "CS175")
+	{CS175();}
+	
+	if (xValue == "CS202")
+	{CS202();}
+	
+	if (xValue == "CS210")
+	{CS210();}
+	
+	if (xValue == "CS285")
+	{CS285();}
+	
+	if (xValue == "CS311")
+	{CS311();}
+	
+	if (xValue == "CS330")
+	{CS330();}
+	
+	if (xValue == "CS331")
+	{CS331();}
+	
+	if (xValue == "CS340")
+	{CS340();}
+	
+	if (xValue == "CS360")
+	{CS360();}
+	
+	if (xValue == "CS371")
+	{CS371();}
+	
+	if (xValue == "CS492")
+	{CS492();}
+	
+	
+}
+
+function CS101() {
+
+svg.selectAll("*").remove();
+d3.tsv("CS101.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+}
+function CS102() {
+
+	
+	svg.selectAll("*").remove();
+
+d3.tsv("CS102.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+}
+function CS175() {
+	
+	svg.selectAll("*").remove();
+
+d3.tsv("CS175.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+}
+function CS202() {
+	
+	svg.selectAll("*").remove();
+
+d3.tsv("CS202.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+}
+function CS210() {
+	
+	svg.selectAll("*").remove();
+
+d3.tsv("CS210.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+}
+function CS285() {
+	
+	svg.selectAll("*").remove();
+
+d3.tsv("CS285.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+}
+function CS311() {
+	
+	svg.selectAll("*").remove();
+
+d3.tsv("CS311.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+}
+function CS330() {
+	
+	svg.selectAll("*").remove();
+
+d3.tsv("CS330.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+}
+function CS331() {
+	
+	svg.selectAll("*").remove();
+
+d3.tsv("CS331.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+}
+function CS340() {
+	
+	svg.selectAll("*").remove();
+
+d3.tsv("CS340.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+}
+function CS371() {
+	
+	svg.selectAll("*").remove();
+
+d3.tsv("CS371.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+}
+function CS492() {
+	
+	svg.selectAll("*").remove();
+
+d3.tsv("CS492.tsv", function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+  });
+
+  var companies = color.domain().map(function(name) {
+    return {
+      name: name,
+      values: data.map(function(d) {
+        return {date: d.date, price: +d[name]};
+      })
+    };
+  });
+
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  y.domain([
+    d3.min(companies, function(c) { return d3.min(c.values, function(v) { return v.price; }); }),
+    d3.max(companies, function(c) { return d3.max(c.values, function(v) { return v.price; }); })
+  ]);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+  svg.append("line")
+        .attr(
+        {
+            "class":"horizontalGrid",
+            "x1" : 0,
+            "x2" : width,
+            "y1" : y(0),
+            "y2" : y(0),
+            "fill" : "none",
+            "shape-rendering" : "crispEdges",
+            "stroke" : "black",
+            "stroke-width" : "1px",
+            "stroke-dasharray": ("3, 3")
+        });
+
+
+  var company = svg.selectAll(".company")
+      .data(companies)
+    .enter().append("g")
+      .attr("class", "company");
+
+
+
+  var path = svg.selectAll(".company").append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { if (d.name == "Pass") 
+                                        {return "#47A922"}
+                                      else {return "#D3000F";}
+                                         });
+
+var totalLength = [path[0][0].getTotalLength(), path[0][1].getTotalLength()];
+
+console.log(totalLength);
+
+
+   d3.select(path[0][0])
+      .attr("stroke-dasharray", totalLength[0] + " " + totalLength[0] ) 
+      .attr("stroke-dashoffset", totalLength[0])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+   d3.select(path[0][1])
+      .attr("stroke-dasharray", totalLength[1] + " " + totalLength[1] )
+      .attr("stroke-dashoffset", totalLength[1])
+      .transition()
+        .duration(5000)
+        .ease("linear")
+        .attr("stroke-dashoffset", 0);
+
+});
+}
+
+
+</script>
